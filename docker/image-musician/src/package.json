@@ -1,15 +1,19 @@
 {
-  "name": "music-musician",
+  "name": "package.json",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "udp client musician",
+  "main": "musician.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
   },
   "author": "Julien Huguet",
   "license": "ISC",
   "dependencies": {
     "moment": "^2.22.1",
-    "uuid": "^3.3.2"
+    "uuid": "^3.2.1"
   }
 }

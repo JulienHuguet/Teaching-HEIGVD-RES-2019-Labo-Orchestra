@@ -1,47 +1,44 @@
-var protocol = require('./protocol');
+// From nodejs.org
+const dgram = require("dgram");
+const server = dgram.createSocket("udp4");
 
-var dgram = require('dgram');
+// Other libraries
+const protocol = require("./protocol");
+const uuid = require("uuid");
+const moment = require("moment");
 
-var uuid = require('uuid');
+var instruments = new Map();
+instruments.set("piano", protocol.PIANO);
+instruments.set("trumpet", protocol.TRUMPER);
+instruments.set("flute", protocol.FLUTE);
+instruments.set("violin", protocol.VIOLIN);
+instruments.set("drum", protocol.DRUM);
 
-var moment = require('moment');
+function Musician(instrument) {
+    this.instrument = instrument;
 
-var socket = dgram.createSocket('udp4');
+    // ici, sinon chaque fois qu'un "musicien" envoie une data
+    // il generve un nouvel ID ce qui est problematique !
+    var data = { 
+        uuid: uuid(),
+        instrument: instrument
+    }
+    
+    Musician.prototype.sendMessage = function() {
+        
+        // on update la date/heure avant l'envoi
+        data.activeSince = moment();
+        
+        var payload = JSON.stringify(data);
+        var message = new Buffer(payload);
+		server.send(message, 0, message.length, protocol.PORT, protocol.MULTICAST_IP, function(err, bytes) {
+			console.log("Sending payload: " + payload);
+		});
+    }
 
-//sounds array
-const SOUNDS = {
-    piano: "ti-ta-ti",
-    trumpet: "pouet",
-    flute: "trulu",
-    violin: "gzi-gzi",
-    drum: "boum-boum"
-};
+    // send the sound every given interval
+    setInterval(this.sendMessage.bind(this), protocol.MUSICIAN_INTERVAL);
+}
 
 var instrument = process.argv[2];
-
-if(instrument === undefined){
-    console.log("Error : instrument undefined.\nplease choose between : \n -> piano\n -> trumpet\n -> flute\n -> violin\n -> drum");
-    process.exit(1);
-}
-
-console.log("Messages will be sent to : " + protocol.MULTICAST_ADDRESS + ":" + protocol.PORT);
-
-setInterval(sendMessage, 1000);
-
-var json = {
-    uuid: uuid(),
-    instrument: process.argv[2]
-};
-
-//send the message to the broadcast address
-function sendMessage() {
-    json.activeSince = moment();
-    
-    var message = JSON.stringify(json);
-    
-    console.log('?? ' + SOUNDS[json.instrument] + ' ?? message : ' + message);
-
-    socket.send(message, 0, message.length, protocol.PORT, protocol.MULTICAST_ADDRESS, function (err, bytes) {
-        if (err) throw err;
-    });
-}
+var m1 = new Musician(instrument);
